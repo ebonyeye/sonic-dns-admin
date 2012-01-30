@@ -1,0 +1,33 @@
+%h1.underline
+  = t :title_audit_information_for
+  = link_to @domain.name, domain_path(@domain)
+
+%p= t :text_audit_click_on_revision_for_detail
+
+%h2.underline= t :title_audit_domain_revisions
+
+- if @domain.audits.size > 0
+  %ul
+    = render :partial => 'domain_audit', :collection => sort_audits_by_date( @domain.audits )
+- else
+  %p
+    %em= t :label_audit_no_domain_revisions
+
+%h2.underline= t :title_audit_rr_revisions
+
+- if @domain.record_audits.size > 0
+  %p= t :text_audit_order_description
+
+  %ul
+    = render :partial => 'record_audit', :collection => sort_audits_by_date( @domain.record_audits )
+- else
+  %p
+    %em= t :text_audit_no_resource_revision
+
+:javascript
+  function toggleDomainAudit(id){
+    $('audit_' + id).toggle();
+  }
+  function toggleRecordAudit(id){
+    $('audit_' + id).toggle();
+  }

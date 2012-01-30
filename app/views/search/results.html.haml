@@ -1,0 +1,10 @@
+%h1.underline= t :title_search_result_for, :who => params[:q]
+%br/
+
+- if @results.empty?
+  %strong= t :message_search_domain_not_found
+- else
+  %table
+    = render :partial => '/domains/domain', :collection => @results
+
+  = will_paginate @results

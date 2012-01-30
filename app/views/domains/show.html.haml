@@ -1,0 +1,217 @@
+- @page_title = @domain.name
+
+%div{ :style => "display: none;" }
+  #record-template-new=t :help_record_template_new
+  #soa-record-edit=t :help_soa_record_edit
+  #zone-edit=t :help_zone_edit
+  #note-new=t :note_new
+  #note-edit=t :note_edit
+  #delete-zone=t :help_delete_zone
+  #audits=t :help_audits
+  #macro=t :help_macro
+  #change-owner=t :help_change_owner
+  #help-primary-ns=t :help_domain_primary_ns
+  #help-contact=t :help_domain_contact
+  #help-refresh=t :help_domain_refresh
+  #help-retry=t :help_domain_retry
+  #help-expire=t :help_domain_expire
+  #help-minimum=t :help_domain_minimum
+  #delete-reset=t :help_delete_reset
+
+- if current_user && current_user.admin? && @domain.user
+  #warning-message.flash-warning{ :style => 'display: none' }
+    = t :warning_this_domain_has_owner
+
+    %br
+    %br
+    = t :warning_this_domain_has_owner
+    = link_to prototip_info_icon('database_delete.png', 'delete-zone'), domain_path( @domain ),  :method => :delete, :confirm => t(:confirm_domain_delete, :domain => @domain.name)
+    %br
+    or
+    %br
+    = t :confirm_delete_this_domain
+    = link_to_function prototip_info_icon('cancel.png', 'delete-reset'), "deleteDomain();"
+
+%h1.underline
+  = @domain.name
+
+#domain-name.padded
+  %table.grid
+    %tr
+      %td= t :label_domain_name
+      %td= @domain.name
+      %td
+        - if current_user
+          = link_to prototip_info_icon('table_edit.png', 'zone-edit'), edit_domain_path(@domain)
+          = link_to prototip_info_icon('report_magnify.png', 'audits'), audits_path(:action => :domain, :id => @domain)
+          - unless @domain.slave?
+            = link_to prototip_info_icon('brick_go.png', 'macro'), apply_macro_domain_path( @domain )
+          - if current_user.admin? && @domain.user
+            = link_to_function prototip_info_icon('database_delete.png', 'delete-zone'), "deleteDomain();" , :id => "delete-link-buffer"
+          - elsif !current_token
+            = link_to prototip_info_icon('database_delete.png', 'delete-zone'), domain_path( @domain ), :method => :delete, :confirm => t(:confirm_domain_delete, :domain => @domain.name)
+    %tr
+      %td=t :label_domain_type
+      %td= @domain.type.humanize
+      %td &nbsp;
+
+    - if @domain.slave?
+      %tr
+        %td= t :label_domain_master_server
+        %td= @domain.master
+        %td &nbsp;
+
+    - if current_user && current_user.admin?
+      %tr
+        %td=t :label_domain_owner
+        %td
+          #owner-info
+            - if @domain.user
+              = @domain.user.login
+            - else
+              \-
+          #owner-edit{ :style => 'display: none' }
+            - remote_form_for( :domain, @domain, :url => change_owner_domain_path( @domain, :format => :js ), :html => { :method => :put } ) do |f|
+              = f.collection_select "user_id", @users, :id, :login, :include_blank => true
+              = submit_tag(t(:generic_save))
+        %td= link_to_function prototip_info_icon('user_edit.png', 'change-owner'), "changeOwner()"
+      %tr
+        %td{ :valign => 'top' }=t :label_domain_notes
+        %td{ :colspan => 2 }
+          #note-row
+            = @domain.notes
+            %br
+            = link_to_function prototip_info_icon('note_edit.png', 'note-edit'), "showNote()"
+
+          #note{ :style => "display: none;" }
+            - remote_form_for( :domain, @domain, :url => update_note_domain_path( @domain, :format => :js ), :html => { :method => :put } ) do |f|
+              = f.text_area :notes, :rows => 5, :cols => 17
+              %br
+              = link_to_function t(:generic_cancel), "hideNote()"
+              = submit_tag(t(:generic_update))
+
+#domain-soa.padded
+  %h2.underline
+    = t :title_soa_record
+    &nbsp;
+    - if current_user
+      = link_to_function prototip_info_icon('database_edit.png', 'soa-record-edit'), "showSOAEdit()"
+  - if @domain.soa_record.nil?
+    %p
+      %em= t :label_soa_record_yet_propagated_from_master
+  - else
+    = render :partial => '/domains/soa_record', :object => @domain.soa_record
+
+#domain-records.padded
+  %h2.underline= t :title_domian_rrs
+  %table.gridwide#record-table
+    %tr
+      %td.small= t :label_domain_record_host
+      %td.small= t :label_domain_record_ttl
+      %td.small= t :label_domain_record_type
+      %td.small= t :label_domain_record_priority
+      %td.small= t :label_domain_record_data
+      %td &nbsp;
+    = render :partial => 'record', :collection => @domain.records_without_soa
+
+- unless @domain.slave?
+  - if current_user || current_token.allow_new_records?
+    = link_to_function prototip_info_icon('database_add.png', 'record-template-new'), "displayRecordForm()"
+    = link_to_function t(:label_domain_record_new), "displayRecordForm()"
+
+    #record-form-div{ :style => "display: none;" }
+      - remote_form_for( :record, @record, :url => domain_records_path( @domain, :format => :js ), :html => { :id => 'record-form' } ) do |f|
+        %table
+          %tr.all
+            %td= t :label_domain_record_type
+            %td
+              = select_record_type( f )
+              = observe_field "record_type", :function => "toggleRecordFields(element,value)"
+          %tr.all
+            %td= t :label_domain_record_host
+            %td= f.text_field :name
+          %tr.all
+            %td= t :label_domain_record_ttl
+            %td= f.text_field :ttl, :size => 6
+          %tr.rt-mx.rt-srv{ :style => 'display :none' }
+            %td= t :label_domain_record_priority
+            %td= f.text_field :prio, :size => 6
+          %tr.all
+            %td= t :label_domain_record_data
+            %td= f.text_field :content
+          %tr.rt-soa{ :style => 'display :none' }
+            %td= t :label_primary_name_server
+            %td= f.text_field :primary_ns
+          %tr.rt-soa{ :style => 'display :none' }
+            %td= t :label_domain_contact
+            %td= f.text_field :contact
+          %tr.rt-soa{ :style => 'display :none' }
+            %td= t :label_domain_refresh
+            %td= f.text_field :refresh, :size => 6
+          %tr.rt-soa{ :style => 'display :none' }
+            %td= t :label_domain_retry
+            %td= f.text_field :retry, :size => 6
+          %tr.rt-soa{ :style => 'display :none' }
+            %td= t :label_domain_expire
+            %td= f.text_field :expire, :size => 6
+          %tr.rt-soa{ :style => 'display :none' }
+            %td= t :label_domain_minimum
+            %td= f.text_field :minimum, :size => 6
+          %tr.all
+            %td &nbsp;
+            %td
+              = link_to_function(t(:generic_cancel), "hideRecordForm()")
+              = submit_tag(t(:generic_create))
+
+:javascript
+  function editRecord(id, type) {
+    $('show_' + type + '_' + id).hide();
+    $('edit_' + type + '_' + id).show();
+  }
+  function hideRecord(id, type) {
+    $('edit_' + type + '_' + id).hide();
+    $('show_' + type + '_' + id).show();
+  }
+  function displayRecordForm() {
+    $('record-form-div').show();
+  }
+  function hideRecordForm() {
+    $('record-form-div').hide();
+  }
+  function resetRecordForm() {
+    $('record-form').reset();
+  }
+  function toggleRecordFields(e,v){
+    t = 'rt-' + v.toLowerCase();
+    $('record-form-div').select('tr').each(function(r){
+      if(r.hasClassName(t) || r.hasClassName('all'))
+        r.show();
+      else
+        r.hide();
+    });
+  }
+  function showNote() {
+    $('note-row').hide();
+    $('note').show();
+  }
+  function hideNote() {
+    $('note').hide();
+    $('note-row').show();
+  }
+  function showSOAEdit() {
+    $('soa-form').hide();
+    $('soa-edit-form').show();
+  }
+  function showSOAForm() {
+    $('soa-edit-form').hide();
+    $('soa-form').show();
+  }
+  function changeOwner() {
+    $('owner-info').toggle();
+    $('owner-edit').toggle();
+  }
+
+  function deleteDomain() {
+    $('warning-message').toggle();
+    $('delete-link-buffer').toggle();
+  }

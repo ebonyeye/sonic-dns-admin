@@ -1,0 +1,14 @@
+%h1.underline= t :title_report_result_for, :who => params[:q]
+%br/
+
+- if @results.empty?
+  %strong= t :message_user_not_found
+- else
+  %table
+    %th= t :label_user_login
+    %th= t :label_user_domains
+    %th= t :label_user_email
+    %th= t :label_user_role
+    = render :partial => 'user', :collection => @results
+
+  = will_paginate @results
