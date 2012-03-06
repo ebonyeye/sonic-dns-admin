@@ -50,6 +50,9 @@
             = link_to_function prototip_info_icon('database_delete.png', 'delete-zone'), "deleteDomain();" , :id => "delete-link-buffer"
           - elsif !current_token
             = link_to prototip_info_icon('database_delete.png', 'delete-zone'), domain_path( @domain ), :method => :delete, :confirm => t(:confirm_domain_delete, :domain => @domain.name)
+          - if MUNIN.available
+            = link_to prototip_info_icon('score.png', 'score'), score_domain_path(@domain) 
+            = link_to prototip_info_icon('performance.png', 'performance'), MUNIN.url+@domain.name+"/index.html", {:target => "_blank"} 
     %tr
       %td=t :label_domain_type
       %td= @domain.type.humanize
@@ -106,6 +109,8 @@
   %h2.underline= t :title_domian_rrs
   %table.gridwide#record-table
     %tr
+      - if MUNIN.available
+        %td.small= t :label_template_record_status
       %td.small= t :label_domain_record_host
       %td.small= t :label_domain_record_ttl
       %td.small= t :label_domain_record_type

@@ -5,17 +5,30 @@
 
 %tr[ record, :marker ]
 %tr[ record, :show ]
+  %td{ :width => 30 }
+    - if MUNIN.available
+      - if record.status?
+        - if record.status =="normal"
+          = prototip_info_icon('sts_normal.png', 'normal') 
+        - if record.status =="warning"
+          = prototip_info_icon('sts_warning.png', 'warning') 
+        - if record.status =="critical"
+          = prototip_info_icon('sts_critical.png', 'critical') 
+      - else
+        = prototip_info_icon('sts_unknown.png', 'unknown') 
   %td{ :width => 250 }= record.shortname
   %td{ :width => 50 }= record.ttl
   %td{ :width => 30 }= record.type
   %td{ :width => 30 }= record.prio
   %td{ :width => 250 }= record.content
-  %td{ :width => 39 }
+  %td{ :width => 60 }
     - unless record.domain.slave?
       - if current_user || current_token.can_change?( record )
         = link_to_function prototip_info_icon('database_edit.png', "record-template-edit-#{record.id}"), "editRecord(#{record.id}, '#{record.type.downcase}')"
       - if current_user || current_token.can_remove?( record )
         = link_to prototip_info_icon('database_delete.png', "record-template-delete-#{record.id}"), domain_record_path( record.domain, record ), :method => :delete, :confirm => t(:confirm_domain_delte_record)
+      - if MUNIN.available && record.type =="A"
+        = link_to prototip_info_icon('performance.png', 'performance'), MUNIN.url+@domain.name+"/"+record.name+"/"+record.id.to_s+"/index.html", {:target => "_blank"} 
 
 - unless record.domain.slave?
   - if current_user || current_token.can_change?( record )
