@@ -65,7 +65,7 @@
       %tr
         %td= t :label_template_record_type
         %td
-          = f.select :record_type, RecordTemplate.record_types.map { |t| [t,t] }
+          = f.select :record_type, @record_types.map { |t| [t,t] }
           = observe_field "record_template_record_type", :function => 'toggleRecordFields(element,value);'
         %td &nbsp;
       %tr
