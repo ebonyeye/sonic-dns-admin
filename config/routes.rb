@@ -42,9 +42,10 @@ ActionController::Routing::Routes.draw do |map|
     :score => :get,
     :update_note => :put,
     :change_owner => :put,
+    :check => :put,
     :apply_macro => [:get,:post]
   }
-  map.resources :records, :member => { :update_soa => :put }
+  map.resources :records, :member => { :update_soa => :put ,:check => [:get,:post] }
   map.resources :soa, :controller => 'records'
 
   # RESTful templates

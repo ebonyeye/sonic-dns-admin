@@ -9,13 +9,15 @@
     - if MUNIN.available
       - if record.status?
         - if record.status =="normal"
-          = prototip_info_icon('sts_normal.png', 'normal') 
+          = link_to_function prototip_info_icon('sts_normal.png', 'normal'),"checkRecord(#{@domain.id},#{record.id})"
         - if record.status =="warning"
-          = prototip_info_icon('sts_warning.png', 'warning') 
+          = link_to_function prototip_info_icon('sts_warning.png', 'warning'), "checkRecord(#{@domain.id},#{record.id})" 
         - if record.status =="critical"
-          = prototip_info_icon('sts_critical.png', 'critical') 
+          = link_to_function prototip_info_icon('sts_critical.png', 'critical'), "checkRecord(#{@domain.id},#{record.id})" 
+        - if record.status =="unknown" || record.status =="connectionerr" 
+          = link_to_function prototip_info_icon('sts_unknown.png', 'unknown'), "checkRecord(#{@domain.id},#{record.id})" 
       - else
-        = prototip_info_icon('sts_unknown.png', 'unknown') 
+        = link_to_function prototip_info_icon('sts_unknown.png', 'unknown'), "checkRecord(#{@domain.id},#{record.id})" 
   %td{ :width => 250 }= record.shortname
   %td{ :width => 50 }= record.ttl
   %td{ :width => 30 }= record.type
@@ -24,7 +26,7 @@
   %td{ :width => 60 }
     - unless record.domain.slave?
       - if current_user || current_token.can_change?( record )
-        = link_to_function prototip_info_icon('database_edit.png', "record-template-edit-#{record.id}"), "editRecord(#{record.id}, '#{record.type.downcase}')"
+        = link_to_function prototip_info_icon('database_edit.png', "record-template-edit-#{record.id}"), "stopCheckStatus_#{record.id}(),editRecord(#{record.id}, '#{record.type.to_s.downcase}')"
       - if current_user || current_token.can_remove?( record )
         = link_to prototip_info_icon('database_delete.png', "record-template-delete-#{record.id}"), domain_record_path( record.domain, record ), :method => :delete, :confirm => t(:confirm_domain_delte_record)
       - if MUNIN.available && record.type =="A"
@@ -50,3 +52,15 @@
                 %td{ :width => 39 }
                   = image_submit_tag "table_save.png", { :class => 'nb' }
                   = link_to_function image_tag("cancel.png"), "hideRecord(#{record.id}, '#{record.type.downcase}')"
+                  
+:javascript
+  tid_#{record.id} = setInterval("checkRecord(#{@domain.id},#{record.id})",3*1000);
+  function startCheckStatus_#{record.id}(){
+    tid_#{record.id} = setInterval("checkRecord(#{@domain.id},#{record.id})",3*1000);
+  }
+  function stopCheckStatus_#{record.id}(){
+    clearInterval(tid_#{record.id});
+    return tid_#{record.id};
+  }
+  
+  

@@ -169,7 +169,11 @@
               = submit_tag(t(:generic_create))
 
 :javascript
-  function editRecord(id, type) {
+  function checkRecord(domain_id, id) {
+    new Ajax.Request('/domains/' + domain_id + '/records/' + id+ '.js', {asynchronous:true, evalScripts:true, parameters:'_method=put&check=yes'}); 
+    return false;
+  }
+  function editRecord(id, type,tid) {
     $('show_' + type + '_' + id).hide();
     $('edit_' + type + '_' + id).show();
   }

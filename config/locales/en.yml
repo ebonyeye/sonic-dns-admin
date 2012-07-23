@@ -341,6 +341,10 @@ en:
   message_record_updated: "Record updated"
   message_record_update_fail: "Update failed"
 
+# Records status check
+  message_record_checked: "Record status updated"
+  message_record_check_fail: "Record status check failed"
+
 # Reports index
   title_user_reports: "User Reports"
   label_user_search: "Search users"

@@ -43,13 +43,28 @@ class RecordsController < ApplicationController
       return
     end
 
-    if @record.update_attributes( params[:record] ) then
-    
-      #update munin entry
-      if /^A$/i =~ @record.type.to_s && MUNIN.available then
-        update_munin_node
-      end
+    if params[:check].blank?
+      if @record.update_attributes( params[:record] ) then
       
+        #update munin entry
+        if /^A$/i =~ @record.type.to_s && MUNIN.available then
+          update_munin_node
+        end
+        
+      end
+    end
+
+    respond_to do |wants|
+      wants.js
+    end
+  end
+
+  def check
+    @record = @domain.records.find( params[:id] )
+
+    if current_token && !current_token.can_change?( @record )
+      render :text => t(:message_token_not_authorized), :status => 403
+      return
     end
 
     respond_to do |wants|
