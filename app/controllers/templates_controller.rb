@@ -15,6 +15,8 @@ class TemplatesController < ApplicationController
   
   def show
     @record_template = RecordTemplate.new( :record_type => 'A' )
+    @record_types =  RecordTemplate.record_types
+    @record_types.delete('SOA')
   end
   
   def new
@@ -37,7 +39,17 @@ class TemplatesController < ApplicationController
     @zone_template.user = current_user unless current_user.admin?
     
     if @zone_template.save
-      flash[:info] = 'Zone template created'
+      default = {
+        :record_type => 'SOA',
+        :content => "ns1.%ZONE% admin@example.com 0 10800 7200 604800 10800"
+      }
+      @record_template = RecordTemplate.new(default)
+      @record_template.zone_template = @zone_template
+      if @record_template.save
+        flash[:info] = 'Zone template created'
+      else
+        flash.now[:error] = "Record template could not be saved"
+      end
       redirect_to zone_template_path( @zone_template )
       return
     end
